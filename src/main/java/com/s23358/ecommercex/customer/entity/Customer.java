@@ -1,8 +1,7 @@
 package com.s23358.ecommercex.customer.entity;
 
+import com.s23358.ecommercex.address.Address;
 import com.s23358.ecommercex.enums.AccountStatus;
-import com.s23358.ecommercex.person.entity.Person;
-import com.s23358.ecommercex.role.entity.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.*;
@@ -10,6 +9,7 @@ import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -51,12 +51,30 @@ public class Customer  {
     @CreationTimestamp
     private LocalDateTime registrationDate;
 
-    @OneToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "users_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
-    private List<Role> roles;
+    @OneToMany(mappedBy = "belongsTo" ,fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+            @Builder.Default
+    List<Address> hasAddresses =  new ArrayList<>();
+
+    @PrePersist
+    @PreUpdate
+    private void validateAddresses() {
+        if (hasAddresses == null || hasAddresses.isEmpty()) {
+            throw new IllegalStateException("Customer must have at least one address");
+        }
+        if (hasAddresses.size() > 3) {
+            throw new IllegalStateException("Customer can have at most 3 addresses");
+        }
+    }
+
+    public void addAddress(Address address) {
+        if(hasAddresses.size() >= 3) throw new IllegalStateException("Customer can have at most 3 addresses");
+        address.setBelongsTo(this);
+        hasAddresses.add(address);
+    }
+    public void removeAddress(Address address) {
+        if (hasAddresses.size() <= 1) throw new IllegalStateException("Customer must have at least one address");
+        hasAddresses.remove(address);
+        address.setBelongsTo(null);
+    }
 
 }

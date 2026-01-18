@@ -1,6 +1,7 @@
 package com.s23358.ecommercex.security;
 
 import com.s23358.ecommercex.customer.entity.Customer;
+import com.s23358.ecommercex.person.entity.Person;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
@@ -14,11 +15,12 @@ import java.util.stream.Collectors;
 @Data
 public class AuthCustomer implements UserDetails {
 
-    private Customer customer;
+//    private Customer customer;
+    private Person person;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return customer.getRoles()
+        return person.getRoles()
                 .stream()
                 .map(role -> new SimpleGrantedAuthority(role.getName()))
                 .collect(Collectors.toList());
@@ -26,11 +28,13 @@ public class AuthCustomer implements UserDetails {
 
     @Override
     public  String getPassword() {
-        return customer.getPassword();
+        return person.getHasCustomer().getPassword();
+//        return customer.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return customer.getEmail();
+        return person.getHasCustomer().getEmail();
+//        return customer.getEmail();
     }
 }

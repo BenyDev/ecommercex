@@ -1,9 +1,8 @@
 package com.s23358.ecommercex.address;
 
+import com.s23358.ecommercex.customer.entity.Customer;
 import jakarta.persistence.*;
 import lombok.*;
-
-import lombok.experimental.SuperBuilder;
 
 @Entity
 @Getter
@@ -38,4 +37,8 @@ public class Address {
 
     @Column(nullable = false)
     private boolean isDefault;
+
+    @ManyToOne(fetch = FetchType.LAZY,  optional = false)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private Customer belongsTo;
 }

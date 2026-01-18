@@ -1,5 +1,6 @@
 package com.s23358.ecommercex.wishList.entity;
 
+import com.s23358.ecommercex.person.entity.Person;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -27,4 +28,16 @@ public class WishList {
     @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    @OneToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "person_id", nullable = false, unique = true)
+    private Person ownedBy;
+
+
+
+    @PrePersist
+    void onCreateEntity(){
+        if (createdAt == null) createdAt = LocalDateTime.now();
+        if (updatedAt == null) updatedAt = createdAt;
+    }
 }

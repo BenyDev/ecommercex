@@ -1,5 +1,6 @@
 package com.s23358.ecommercex.auth_users.service.impl;
 
+import com.s23358.ecommercex.address.Address;
 import com.s23358.ecommercex.admin.Admin;
 import com.s23358.ecommercex.auth_users.dto.LoginRequest;
 import com.s23358.ecommercex.auth_users.dto.LoginResponse;
@@ -15,8 +16,12 @@ import com.s23358.ecommercex.person.repository.PersonRepository;
 import com.s23358.ecommercex.res.Response;
 import com.s23358.ecommercex.role.entity.Role;
 import com.s23358.ecommercex.role.repository.RoleRepository;
+import com.s23358.ecommercex.security.TokenService;
+import com.s23358.ecommercex.wishList.entity.WishList;
+import com.s23358.ecommercex.wishList.repository.WishListRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +37,9 @@ public class AuthServiceImpl implements AuthService {
     private final RoleRepository roleRepository;
     private final PersonRepository personRepository;
 
+    private final PasswordEncoder passwordEncoder;
+    private final TokenService tokenService;
+
     @Override
     @Transactional
     public Response<String> register(RegistrationCustomerRequest request) {
@@ -42,6 +50,7 @@ public class AuthServiceImpl implements AuthService {
             Role role = roleRepository.findByName("CUSTOMER")
                     .orElseThrow(() -> new NotFoundException("CUSTOMER role not found"));
             roles = Collections.singletonList(role);
+
         }else{
             roles = request.getRoles().stream()
                     .map(roleName -> roleRepository.findByName(roleName)
@@ -54,31 +63,77 @@ public class AuthServiceImpl implements AuthService {
         Customer customer = Customer.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
-                .password(request.getPassword())
+                .password(passwordEncoder.encode(request.getPassword()))
                 .email(request.getEmail())
                 .phoneNumber(request.getPhoneNumber())
-                .roles(roles)
                 .status(AccountStatus.ACTIVE)
                 .build();
-        Customer savedCustomer = customerRepository.save(customer);
+//        Customer savedCustomer = customerRepository.save(customer);
+
+        Address address = Address.builder()
+                .street(request.getStreet())
+                .streetNum(request.getStreetNum())
+                .localNum(request.getLocalNum())
+                .city(request.getCity())
+                .zipCode(request.getZipCode())
+                .country(request.getCountry())
+                .isDefault(true)
+                .build();
+
+        customer.addAddress(address);
+
 
         Person person = Person.builder()
-                .hasCustomer(savedCustomer)
+                .hasCustomer(customer)
                 .hasGuest(null)
+                .roles(roles)
                 .build();
+
+
+        WishList wishList = WishList.builder()
+//                .ownedBy(person)
+                .build();
+
+        person.setWishList(wishList);
+
         personRepository.save(person);
 
 
         return Response.<String>builder()
                 .statusCode(HttpStatus.OK.value())
                 .message("Your account has been created successfully")
-                .data("Admin account has been created successfully")
+                .data("Account has been created successfully")
                 .build();
     }
 
-//
-//    @Override
-//    public Response<LoginResponse> login(LoginRequest loginRequest) {
-//        return null;
-//    }
+
+    @Override
+    public Response<LoginResponse> login(LoginRequest loginRequest) {
+
+        String email = loginRequest.getEmail();
+        String password = loginRequest.getPassword();
+
+        Customer customer = customerRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("Email not found"));
+
+        if(!passwordEncoder.matches(password, customer.getPassword())){
+            throw new BadRequestException("Wrong password");
+        }
+
+        String token = tokenService.generateToken(customer.getEmail());
+        Person person = personRepository.findByHasCustomer(customer)
+                .orElseThrow(() -> new NotFoundException("Customer not found"));
+
+        LoginResponse loginResponse = LoginResponse.builder()
+                .roles(person.getRoles().stream().map(Role::getName).toList())
+                .token(token)
+                .build();
+
+        return Response.<LoginResponse>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Login Successful")
+                .data(loginResponse)
+                .build();
+
+    }
 }

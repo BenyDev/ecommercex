@@ -22,7 +22,7 @@ public class RoleInitialization implements CommandLineRunner {
                 .name("ADMIN").build();
 
         Role user = Role.builder()
-                .name("USER").build();
+                .name("CUSTOMER").build();
         roleRepository.save(admin);
         roleRepository.save(user);
     }

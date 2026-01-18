@@ -28,4 +28,6 @@ public class WishListItem {
     @CreationTimestamp
     @Column(nullable = false)
     private LocalDateTime addedAt;
+
+
 }

@@ -7,5 +7,5 @@ import com.s23358.ecommercex.res.Response;
 
 public interface AuthService {
     Response<String> register(RegistrationCustomerRequest registrationCustomerRequest);
-//    Response<LoginResponse> login(LoginRequest loginRequest);
+    Response<LoginResponse> login(LoginRequest loginRequest);
 }

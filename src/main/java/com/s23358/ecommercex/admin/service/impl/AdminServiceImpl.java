@@ -33,41 +33,41 @@ public class AdminServiceImpl implements AdminService {
     @Transactional
     public Response<String> register(RegistrationAdminRequest request) {
 
-        List<Role> roles;
-
-
-
-        if(request.getRoles() == null || request.getRoles().isEmpty()){
-            Role role = roleRepository.findByName("ADMIN")
-                    .orElseThrow(() -> new NotFoundException("ADMIN role not found"));
-            roles = Collections.singletonList(role);
-        }else{
-            roles = request.getRoles().stream()
-                    .map(roleName -> roleRepository.findByName(roleName)
-                            .orElseThrow(() -> new NotFoundException("Role not found"))).toList();
-        }
-        if (customerRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new BadRequestException("Email already exists");
-        }
-
-        Admin admin = Admin.builder()
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .password(request.getPassword())
-                .email(request.getEmail())
-                .roles(roles)
-                .phoneNumber(request.getPhoneNumber())
-                .lastLoginAt(LocalDateTime.now())
-                .isActive(true)
-                .status(AccountStatus.ACTIVE)
-                .build();
-        Admin savedAdmin = customerRepository.save(admin);
-
-        Person person = Person.builder()
-                    .hasCustomer(savedAdmin)
-                    .hasGuest(null)
-                    .build();
-        personRepository.save(person);
+//        List<Role> roles;
+//
+//
+//
+//        if(request.getRoles() == null || request.getRoles().isEmpty()){
+//            Role role = roleRepository.findByName("ADMIN")
+//                    .orElseThrow(() -> new NotFoundException("ADMIN role not found"));
+//            roles = Collections.singletonList(role);
+//        }else{
+//            roles = request.getRoles().stream()
+//                    .map(roleName -> roleRepository.findByName(roleName)
+//                            .orElseThrow(() -> new NotFoundException("Role not found"))).toList();
+//        }
+//        if (customerRepository.findByEmail(request.getEmail()).isPresent()) {
+//            throw new BadRequestException("Email already exists");
+//        }
+//
+//        Admin admin = Admin.builder()
+//                .firstName(request.getFirstName())
+//                .lastName(request.getLastName())
+//                .password(request.getPassword())
+//                .email(request.getEmail())
+//                .roles(roles)
+//                .phoneNumber(request.getPhoneNumber())
+//                .lastLoginAt(LocalDateTime.now())
+//                .isActive(true)
+//                .status(AccountStatus.ACTIVE)
+//                .build();
+//        Admin savedAdmin = customerRepository.save(admin);
+//
+//        Person person = Person.builder()
+//                    .hasCustomer(savedAdmin)
+//                    .hasGuest(null)
+//                    .build();
+//        personRepository.save(person);
 
 
         return Response.<String>builder()
