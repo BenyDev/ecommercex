@@ -1,5 +1,6 @@
 package com.s23358.ecommercex.discount.entity;
 
+import com.s23358.ecommercex.customer.entity.Customer;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -37,4 +38,8 @@ public class Discount {
 
     @Column(nullable = false)
     private Double minOrderValue;
+
+    @ManyToOne(fetch =  FetchType.LAZY, optional = false)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private Customer belongsTo;
 }

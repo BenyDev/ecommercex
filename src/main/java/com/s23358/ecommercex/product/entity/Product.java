@@ -1,6 +1,9 @@
 package com.s23358.ecommercex.product.entity;
 
+import com.s23358.ecommercex.brand.entity.Brand;
+import com.s23358.ecommercex.category.entity.Category;
 import com.s23358.ecommercex.enums.Unit;
+import com.s23358.ecommercex.promotion.entity.Promotion;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -9,9 +12,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Table(name = "Product")
@@ -62,4 +63,17 @@ public class Product {
     @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "brand_id", nullable = false)
+    private Brand brand;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category belongsToCategory;
+
+    @OneToMany(mappedBy = "product",fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Promotion> hasPromotions = new ArrayList<>();
+
+
 }

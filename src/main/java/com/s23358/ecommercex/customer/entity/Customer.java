@@ -1,6 +1,7 @@
 package com.s23358.ecommercex.customer.entity;
 
 import com.s23358.ecommercex.address.Address;
+import com.s23358.ecommercex.discount.entity.Discount;
 import com.s23358.ecommercex.enums.AccountStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -55,6 +56,10 @@ public class Customer  {
             @Builder.Default
     List<Address> hasAddresses =  new ArrayList<>();
 
+    @OneToMany(fetch = FetchType.LAZY,cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "belongsTo")
+            @Builder.Default
+    List<Discount> receivesDiscounts = new ArrayList<>();
+
     @PrePersist
     @PreUpdate
     private void validateAddresses() {
@@ -76,5 +81,7 @@ public class Customer  {
         hasAddresses.remove(address);
         address.setBelongsTo(null);
     }
+
+
 
 }

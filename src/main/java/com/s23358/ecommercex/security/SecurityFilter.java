@@ -44,6 +44,9 @@ public class SecurityFilter {
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
                                 .requestMatchers("/api/auth/**").permitAll()
+                                .requestMatchers("/api/brand/**").permitAll()
+                                .requestMatchers("/api/category/**").permitAll()
+                                .requestMatchers("/api/product/**").permitAll()
                                 .requestMatchers("/h2-console/**")
                                 .permitAll()
                                 .anyRequest().authenticated())
