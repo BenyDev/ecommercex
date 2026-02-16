@@ -108,4 +108,19 @@ public class CategoryServiceImpl implements CategoryService {
                 .message(String.format("Category %s deleted successful",categoryName))
                 .build();
     }
+
+    @Override
+    public Response<CategoryResponse> getCategoryById(Long id) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Category with id " + id +" not found"));
+
+        CategoryResponse response = modelMapper.map(category, CategoryResponse.class);
+
+        return Response.<CategoryResponse>builder()
+                .message("Fetch success")
+                .data(response)
+                .statusCode(200)
+                .build();
+
+    }
 }

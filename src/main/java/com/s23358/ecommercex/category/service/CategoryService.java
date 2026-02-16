@@ -15,4 +15,6 @@ public interface CategoryService {
 
     Response<Void> deleteCategory(Long id);
 
+    Response<CategoryResponse> getCategoryById(Long id);
+
 }

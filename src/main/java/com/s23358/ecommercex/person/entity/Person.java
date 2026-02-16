@@ -11,7 +11,10 @@ import org.hibernate.annotations.FetchMode;
 
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "Person")
@@ -38,13 +41,13 @@ public class Person {
     @JoinColumn(name = "hasProfilGuest")
     private Guest hasGuest;
 
-    @OneToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "users_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
-    private List<Role> roles;
+    private List<Role> roles = new ArrayList<>();
 
     @OneToOne(mappedBy = "ownedBy", orphanRemoval = true, cascade = CascadeType.ALL, optional = true)
     private WishList hasWishList;

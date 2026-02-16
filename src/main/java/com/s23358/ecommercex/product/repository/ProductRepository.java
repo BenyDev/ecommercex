@@ -9,4 +9,6 @@ import java.util.List;
 
 public interface ProductRepository extends JpaRepository<Product,Long> {
     Page<Product> findAllByBelongsToCategory_Id(Long categoryId, Pageable pageable);
+    boolean existsByNameAndBelongsToCategory_Id(String name, Long categoryId);
+
 }

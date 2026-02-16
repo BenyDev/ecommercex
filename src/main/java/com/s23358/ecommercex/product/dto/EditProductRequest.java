@@ -1,7 +1,7 @@
 package com.s23358.ecommercex.product.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.s23358.ecommercex.enums.Unit;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -10,7 +10,6 @@ import jakarta.validation.constraints.Positive;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -22,7 +21,6 @@ import java.util.List;
 public class EditProductRequest {
 
     @NotNull
-    @NotBlank
     private Long id;
 
     @NotBlank
@@ -46,10 +44,10 @@ public class EditProductRequest {
     @Positive
     private BigDecimal weight;
 
-    @Builder.Default
-    private List<@NotBlank String> images = new ArrayList<>();
+    private List<@NotBlank String> images;
 
     @NotNull
+    @JsonProperty("active")
     private Boolean isActive;
 
     @NotNull

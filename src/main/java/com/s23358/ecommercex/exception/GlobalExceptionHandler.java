@@ -31,5 +31,28 @@ public class GlobalExceptionHandler {
         );
 
     }
+    @ExceptionHandler(ProductImageStorageException.class)
+    public ResponseEntity<Response<Void>> handleProductImageStorageException(ProductImageStorageException ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                Response.<Void>builder()
+                        .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                        .message(ex.getMessage())
+                        .build()
+        );
+
+    }
+
+    @ExceptionHandler(BrandImageStorageException.class)
+    public ResponseEntity<Response<Void>> handleBrandImageStorageException(BrandImageStorageException ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                Response.<Void>builder()
+                        .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                        .message(ex.getMessage())
+                        .build()
+        );
+
+    }
+
+
 
 }

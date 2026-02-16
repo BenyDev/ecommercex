@@ -47,6 +47,8 @@ public class SecurityFilter {
                                 .requestMatchers("/api/brand/**").permitAll()
                                 .requestMatchers("/api/category/**").permitAll()
                                 .requestMatchers("/api/products/**").permitAll()
+                                .requestMatchers("/uploads/products/**").permitAll()
+                                .requestMatchers("/uploads/brands/**").permitAll()
                                 .requestMatchers("/h2-console/**")
                                 .permitAll()
                                 .anyRequest().authenticated())

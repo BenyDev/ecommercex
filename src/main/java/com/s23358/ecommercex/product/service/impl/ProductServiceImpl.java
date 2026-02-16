@@ -5,6 +5,7 @@ import com.s23358.ecommercex.brand.repository.BrandRepository;
 import com.s23358.ecommercex.category.entity.Category;
 import com.s23358.ecommercex.category.repository.CategoryRepository;
 import com.s23358.ecommercex.exception.NotFoundException;
+import com.s23358.ecommercex.exception.ProductImageStorageException;
 import com.s23358.ecommercex.product.dto.CreateProductRequest;
 import com.s23358.ecommercex.product.dto.EditProductRequest;
 import com.s23358.ecommercex.product.dto.ProductResponse;
@@ -21,8 +22,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -32,80 +35,137 @@ public class ProductServiceImpl implements ProductService {
     private final CategoryRepository categoryRepository;
     private final BrandRepository brandRepository;
 
+    private final FileStorageService fileStorageService;
     private final ModelMapper modelMapper;
 
     @Override
     @Transactional
-    public Response<ProductResponse> createProduct(CreateProductRequest request) {
+    public Response<ProductResponse> createProduct(CreateProductRequest request, List<MultipartFile> files) {
 
-        Brand brand = brandRepository.findById(request.getBrandId())
-                .orElseThrow(() -> new NotFoundException("Brand not found"));
+        List<String> imageUrls = new ArrayList<>();
 
-        Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new NotFoundException("Category not found"));
+        try {
+            Brand brand = brandRepository.findById(request.getBrandId())
+                    .orElseThrow(() -> new NotFoundException("Brand not found"));
 
-        Product product = Product.builder()
-                .name(request.getName())
-                .price(request.getPrice())
-                .description(request.getDescription())
-                .unit(request.getUnit())
-                .stockQuantity(request.getStockQuantity())
-                .weight(request.getWeight())
-                .images(request.getImages() == null ? new ArrayList<>() : new ArrayList<>(request.getImages()))
-                .isActive(request.isActive())
-                .brand(brand)
-                .belongsToCategory(category)
-                .build();
+            Category category = categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new NotFoundException("Category not found"));
 
-        Product saved = productRepository.save(product);
+             if(files != null && !files.isEmpty()){
+                 imageUrls = fileStorageService.saveProductImages(files);
+            }
 
-        ProductResponse productResponse = productToProductResponse(saved);
 
-        return Response.<ProductResponse>builder()
-                .statusCode(HttpStatus.OK.value())
-                .message("Product created successfully")
-                .data(productResponse)
-                .build();
+            Product product = Product.builder()
+                    .name(request.getName())
+                    .price(request.getPrice())
+                    .description(request.getDescription())
+                    .unit(request.getUnit())
+                    .stockQuantity(request.getStockQuantity())
+                    .weight(request.getWeight())
+                    .images(new  ArrayList<>(imageUrls))
+                    .isActive(request.isActive())
+                    .brand(brand)
+                    .belongsToCategory(category)
+                    .build();
+
+            Product saved = productRepository.save(product);
+
+            ProductResponse productResponse = productToProductResponse(saved);
+
+            return Response.<ProductResponse>builder()
+                    .statusCode(HttpStatus.OK.value())
+                    .message("Product created successfully")
+                    .data(productResponse)
+                    .build();
+
+        }catch (Exception e){
+            fileStorageService.deleteByUrls(imageUrls);
+            throw new ProductImageStorageException("Failed to store product images", e);
+        }
+
     }
 
     @Override
-    public Response<ProductResponse> editProduct(EditProductRequest editProductRequest) {
+    @Transactional
+    public Response<ProductResponse> editProduct(EditProductRequest request, List<MultipartFile> files) {
 
-        Product productToEdit = productRepository.findById(editProductRequest.getId()).
-                orElseThrow(() -> new NotFoundException("Product not found"));
+        List<String> newUploadedUrls = new ArrayList<>();
+        List<String> urlsToDeleteAfterSave = new ArrayList<>();
 
-        Brand brand = brandRepository.findById(editProductRequest.getBrandId())
-                        .orElseThrow(() -> new NotFoundException("Brand not found"));
+        try {
+            Product productToEdit = productRepository.findById(request.getId())
+                    .orElseThrow(() -> new NotFoundException("Product not found"));
 
-        Category category = categoryRepository.findById(editProductRequest.getBelongsToCategory())
-                .orElseThrow(() -> new NotFoundException("Category not found"));
+            Brand brand = brandRepository.findById(request.getBrandId())
+                    .orElseThrow(() -> new NotFoundException("Brand not found"));
+
+            Category category = categoryRepository.findById(request.getBelongsToCategory())
+                    .orElseThrow(() -> new NotFoundException("Category not found"));
 
 
+            List<String> oldImages = productToEdit.getImages() == null
+                    ? new ArrayList<>()
+                    : new ArrayList<>(productToEdit.getImages());
 
-        productToEdit.setName(editProductRequest.getName());
-        productToEdit.setPrice(editProductRequest.getPrice());
-        productToEdit.setDescription(editProductRequest.getDescription());
-        productToEdit.setUnit(editProductRequest.getUnit());
-        productToEdit.setStockQuantity(editProductRequest.getStockQuantity());
-        productToEdit.setWeight(editProductRequest.getWeight());
-        productToEdit.setActive(editProductRequest.getIsActive());
-        productToEdit.setBrand(brand);
-        productToEdit.setBelongsToCategory(category);
 
-        if(editProductRequest.getImages() != null) {
-            productToEdit.setImages(new ArrayList<>(editProductRequest.getImages()));
+            if (files != null && !files.isEmpty()) {
+                newUploadedUrls = fileStorageService.saveProductImages(files);
+            }
+
+
+            productToEdit.setName(request.getName());
+            productToEdit.setPrice(request.getPrice());
+            productToEdit.setDescription(request.getDescription());
+            productToEdit.setUnit(request.getUnit());
+            productToEdit.setStockQuantity(request.getStockQuantity());
+            productToEdit.setWeight(request.getWeight());
+            productToEdit.setActive(request.getIsActive());
+            productToEdit.setBrand(brand);
+            productToEdit.setBelongsToCategory(category);
+
+
+            if (request.getImages() != null) {
+
+                List<String> keepImages = new ArrayList<>(request.getImages());
+
+
+                for (String oldUrl : oldImages) {
+                    if (!keepImages.contains(oldUrl)) {
+                        urlsToDeleteAfterSave.add(oldUrl);
+                    }
+                }
+
+
+                keepImages.addAll(newUploadedUrls);
+                productToEdit.setImages(keepImages);
+
+            } else {
+
+                if (!newUploadedUrls.isEmpty()) {
+                    List<String> merged = new ArrayList<>(oldImages);
+                    merged.addAll(newUploadedUrls);
+                    productToEdit.setImages(merged);
+                }
+            }
+
+
+            Product saved = productRepository.save(productToEdit);
+
+            if (!urlsToDeleteAfterSave.isEmpty()) {
+                fileStorageService.deleteByUrls(urlsToDeleteAfterSave);
+            }
+
+            return Response.<ProductResponse>builder()
+                    .statusCode(HttpStatus.OK.value())
+                    .data(productToProductResponse(saved))
+                    .message("Product updated")
+                    .build();
+
+        } catch (Exception e) {
+            fileStorageService.deleteByUrls(newUploadedUrls);
+            throw new ProductImageStorageException("Failed to update product images", e);
         }
-
-        productRepository.save(productToEdit);
-
-        Product saved = productRepository.save(productToEdit);
-        ProductResponse response = productToProductResponse(saved);
-
-        return Response.<ProductResponse>builder()
-                .statusCode(HttpStatus.OK.value())
-                .data(response)
-                .message("Product updated")
-                .build();
     }
 
     @Override
@@ -120,6 +180,46 @@ public class ProductServiceImpl implements ProductService {
                 .statusCode(HttpStatus.OK.value())
                 .message("Products fetched")
                 .data(responses)
+                .build();
+    }
+
+    @Override
+    public Response<ProductResponse> getProductById(Long id) {
+
+        Product product = productRepository.findById(id).orElseThrow(() -> new NotFoundException("Product not found"));
+
+        ProductResponse productResponse = productToProductResponse(product);
+
+        return Response.<ProductResponse>builder()
+                .data(productResponse)
+                .message("Product fetched success")
+                .statusCode(200)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public Response<Void> deleteProduct(Long id) {
+
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Product not found"));
+
+        List<String> urlsToDelete = product.getImages() == null
+                ? List.of()
+                : new ArrayList<>(product.getImages());
+
+        productRepository.delete(product);
+
+        try {
+            fileStorageService.deleteByUrls(urlsToDelete);
+        } catch (Exception e) {
+            System.out.println("Failed to delete product images: " + e.getMessage());
+        }
+
+        return Response.<Void>builder()
+                .statusCode(HttpStatus.OK.value())
+                .message("Product deleted")
+                .data(null)
                 .build();
     }
 

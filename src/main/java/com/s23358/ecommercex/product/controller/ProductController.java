@@ -1,5 +1,6 @@
 package com.s23358.ecommercex.product.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.s23358.ecommercex.enums.Unit;
 import com.s23358.ecommercex.product.dto.CreateProductRequest;
 import com.s23358.ecommercex.product.dto.EditProductRequest;
@@ -11,9 +12,11 @@ import com.s23358.ecommercex.res.Response;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 
 import java.util.Arrays;
@@ -26,11 +29,14 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
-    private final ProductRepository productRepository;
 
-    @PostMapping
-    public ResponseEntity<Response<ProductResponse>>  createProduct(@Valid @RequestBody CreateProductRequest request){
-        return ResponseEntity.ok(productService.createProduct(request));
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Response<ProductResponse>>  createProduct(
+            @RequestPart("data") @Valid  CreateProductRequest request,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files
+
+    ){
+        return ResponseEntity.ok(productService.createProduct(request,files));
     }
 
     @GetMapping("/category/{categoryId}")
@@ -41,6 +47,10 @@ public class ProductController {
     ){
         return ResponseEntity.ok(productService.getAllByCategoryId(categoryId,page,size));
     }
+    @GetMapping("/{id}")
+    public ResponseEntity<Response<ProductResponse>> getProductById(@PathVariable Long id){
+        return ResponseEntity.ok(productService.getProductById(id));
+    }
 
     @GetMapping("/units")
     public List<String> getAllUnits(){
@@ -48,8 +58,16 @@ public class ProductController {
                 .map(Enum::name).toList();
     }
 
-    @PutMapping
-    public ResponseEntity<Response<ProductResponse>> editProduct(@Valid @RequestBody EditProductRequest request){
-        return ResponseEntity.ok(productService.editProduct(request));
+    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Response<ProductResponse>> editProduct(
+             @RequestPart("data") @Valid EditProductRequest request,
+             @RequestPart(value = "files",  required = false) List<MultipartFile> files
+    ){
+        return ResponseEntity.ok(productService.editProduct(request,files));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Response<Void>> deleteProduct(@PathVariable Long id){
+        return ResponseEntity.ok(productService.deleteProduct(id));
     }
 }

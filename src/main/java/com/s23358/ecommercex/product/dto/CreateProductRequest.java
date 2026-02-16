@@ -1,18 +1,22 @@
 package com.s23358.ecommercex.product.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.s23358.ecommercex.enums.Unit;
 import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @Data
-@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CreateProductRequest {
 
-    @NotEmpty
+
     @NotBlank
     private String name;
 
@@ -34,9 +38,7 @@ public class CreateProductRequest {
     @DecimalMin(value = "0.00", inclusive = false)
     private BigDecimal weight;
 
-
-    private List<@NotBlank String> images;
-
+    @JsonProperty("active")
     private boolean isActive;
 
     @NotNull
