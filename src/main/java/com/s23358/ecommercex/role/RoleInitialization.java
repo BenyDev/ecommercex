@@ -18,12 +18,18 @@ public class RoleInitialization implements CommandLineRunner {
     @Transactional
     public void run(String... args) throws Exception {
 
-        Role admin = Role.builder()
-                .name("ADMIN").build();
+        boolean isAdmin = roleRepository.findByName("ADMIN").isPresent();
+        boolean isCustomer = roleRepository.findByName("CUSTOMER").isPresent();
 
-        Role user = Role.builder()
-                .name("CUSTOMER").build();
-        roleRepository.save(admin);
-        roleRepository.save(user);
+        if(!isAdmin){
+            Role admin = Role.builder().name("ADMIN").build();
+            roleRepository.save(admin);
+        }
+
+        if(!isCustomer){
+            Role customer = Role.builder().name("CUSTOMER").build();
+            roleRepository.save(customer);
+        }
+
     }
 }

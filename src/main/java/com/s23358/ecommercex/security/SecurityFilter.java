@@ -46,11 +46,12 @@ public class SecurityFilter {
                                 .requestMatchers("/api/auth/**").permitAll()
                                 .requestMatchers("/api/brand/**").permitAll()
                                 .requestMatchers("/api/category/**").permitAll()
-                                .requestMatchers("/api/product/**").permitAll()
+                                .requestMatchers("/api/products/**").permitAll()
                                 .requestMatchers("/h2-console/**")
                                 .permitAll()
                                 .anyRequest().authenticated())
-                .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(sessionManagement ->
+                                sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class);
 
         return httpSecurity.build();

@@ -33,7 +33,7 @@ public class RegistrationCustomerRequest {
     @NotBlank
     private String phoneNumber;
 
-    private List<String> roles;
+//    private List<String> roles;
 
     @NotNull
     @NotBlank
@@ -58,9 +58,5 @@ public class RegistrationCustomerRequest {
     @NotNull
     @NotBlank
     private String country;
-
-
-    private boolean isDefault = true; // pamietaj, aby dodac i usunąć z dto
-
 
 }

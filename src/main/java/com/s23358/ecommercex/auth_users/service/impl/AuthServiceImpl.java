@@ -46,16 +46,22 @@ public class AuthServiceImpl implements AuthService {
 
         List<Role> roles;
 
-        if(request.getRoles() == null || request.getRoles().isEmpty()){
-            Role role = roleRepository.findByName("CUSTOMER")
+//        if(request.getRoles() == null || request.getRoles().isEmpty()){
+//            Role role = roleRepository.findByName("CUSTOMER")
+//                    .orElseThrow(() -> new NotFoundException("CUSTOMER role not found"));
+//            roles = Collections.singletonList(role);
+//
+//        }else{
+//            roles = request.getRoles().stream()
+//                    .map(roleName -> roleRepository.findByName(roleName)
+//                            .orElseThrow(() -> new NotFoundException("Role not found"))).toList();
+//        }
+        Role role = roleRepository.findByName("CUSTOMER")
                     .orElseThrow(() -> new NotFoundException("CUSTOMER role not found"));
             roles = Collections.singletonList(role);
 
-        }else{
-            roles = request.getRoles().stream()
-                    .map(roleName -> roleRepository.findByName(roleName)
-                            .orElseThrow(() -> new NotFoundException("Role not found"))).toList();
-        }
+
+
         if (customerRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new BadRequestException("Email already exists");
         }
@@ -68,7 +74,6 @@ public class AuthServiceImpl implements AuthService {
                 .phoneNumber(request.getPhoneNumber())
                 .status(AccountStatus.ACTIVE)
                 .build();
-//        Customer savedCustomer = customerRepository.save(customer);
 
         Address address = Address.builder()
                 .street(request.getStreet())
@@ -90,9 +95,7 @@ public class AuthServiceImpl implements AuthService {
                 .build();
 
 
-        WishList wishList = WishList.builder()
-//                .ownedBy(person)
-                .build();
+        WishList wishList = WishList.builder().build();
 
         person.setWishList(wishList);
 
